@@ -1,5 +1,5 @@
 import express from "express";
-import { createSnippet, getSnippets, getSnippetById } from "../controllers/snippetController";
+import { createSnippet, getSnippets, getSnippetById, updateSnippet } from "../controllers/snippetController";
 
 const router = express.Router();
 
@@ -11,4 +11,8 @@ router.get("/", getSnippets);
 
 // GET /api/snippets/:id
 router.get("/:id", getSnippetById);
+
+// PUT /api/snippets/:id
+router.put("/:id", updateSnippet);
+
 export default router;

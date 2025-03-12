@@ -30,6 +30,38 @@ export const createSnippet = async (req: Request, res: Response): Promise<void> 
   }
 };
 
+export const updateSnippet = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const { title, code, language, tags } = req.body;
+  
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        res.status(400).json({ message: "Invalid snippet ID" });
+        return;
+      }
+  
+      const snippet = await Snippet.findById(id);
+      if (!snippet) {
+        res.status(404).json({ message: "Snippet not found" });
+        return;
+      }
+  
+      snippet.title = title || snippet.title;
+      snippet.code = code ? encodeCode(code) : snippet.code;
+      snippet.language = language || snippet.language;
+      snippet.tags = tags || snippet.tags;
+      snippet.updatedAt = new Date();
+  
+      await snippet.save();
+      res.status(200).json({
+        ...snippet.toObject(),
+        code: decodeCode(snippet.code),
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Error updating snippet", error });
+    }
+  };
+
 export const getSnippets = async (req: Request, res: Response): Promise<void> => {
   try {
     const { language, tags, page = "1", limit = "10", sort = "createdAt", order = "desc" } = req.query;
