@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import mongoose from "mongoose";
 import Snippet from "../models/Snippet";
 
 const encodeCode = (code: string): string => Buffer.from(code).toString("base64");
@@ -61,6 +62,11 @@ export const getSnippets = async (req: Request, res: Response): Promise<void> =>
 export const getSnippetById = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        res.status(400).json({ message: "Invalid snippet ID" });
+        return;
+      }
     const snippet = await Snippet.findById(id);
 
     if (!snippet) {
