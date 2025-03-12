@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
     "target": "ES2022",
     "module": "Preserve",
     "strict": true,
@@ -10,6 +12,6 @@
     "resolveJsonModule": true,
     "noUnusedParameters": false
   },
-  "include": ["src/**/*", "public"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "src/public", "dist"]
 }
