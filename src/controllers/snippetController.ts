@@ -57,3 +57,27 @@ export const getSnippets = async (req: Request, res: Response): Promise<void> =>
     res.status(500).json({ message: "Error fetching snippets", error });
   }
 };
+
+export const getSnippetById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const snippet = await Snippet.findById(id);
+
+    if (!snippet) {
+      res.status(404).json({ message: "Snippet not found" });
+      return;
+    }
+
+    if (snippet.expiresAt && snippet.expiresAt < new Date()) {
+      res.status(410).json({ message: "Snippet has expired" });
+      return;
+    }
+
+    res.status(200).json({
+      ...snippet.toObject(),
+      code: decodeCode(snippet.code),
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching snippet", error });
+  }
+};
