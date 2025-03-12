@@ -5,14 +5,17 @@ import Snippet from "../models/Snippet";
 const encodeCode = (code: string): string => Buffer.from(code).toString("base64");
 const decodeCode = (code: string): string => Buffer.from(code, "base64").toString("utf-8");
 
+
 export const createSnippet = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { title, code, language, tags, expiresIn } = req.body;
+    const { title, code, language, tags = [], expiresIn } = req.body;
 
     if (!title || !code || !language) {
       res.status(400).json({ message: "Title, code, and language are required." });
       return;
     }
+
+    const expiresAt = expiresIn ? new Date(Date.now() + expiresIn * 1000) : null;
 
     const newSnippet = new Snippet({
       title,
@@ -20,7 +23,9 @@ export const createSnippet = async (req: Request, res: Response): Promise<void> 
       language,
       tags,
       expiresIn,
-      expiresAt: expiresIn ? new Date(Date.now() + expiresIn * 1000) : null,
+      expiresAt,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
 
     await newSnippet.save();
@@ -30,48 +35,64 @@ export const createSnippet = async (req: Request, res: Response): Promise<void> 
   }
 };
 
+
 export const updateSnippet = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { id } = req.params;
-      const { title, code, language, tags } = req.body;
-  
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        res.status(400).json({ message: "Invalid snippet ID" });
-        return;
-      }
-  
-      const snippet = await Snippet.findById(id);
-      if (!snippet) {
-        res.status(404).json({ message: "Snippet not found" });
-        return;
-      }
-  
-      snippet.title = title || snippet.title;
-      snippet.code = code ? encodeCode(code) : snippet.code;
-      snippet.language = language || snippet.language;
-      snippet.tags = tags || snippet.tags;
-      snippet.updatedAt = new Date();
-  
-      await snippet.save();
-      res.status(200).json({
-        ...snippet.toObject(),
-        code: decodeCode(snippet.code),
-      });
-    } catch (error) {
-      res.status(500).json({ message: "Error updating snippet", error });
+  try {
+    const { id } = req.params;
+    const { title, code, language, tags, expiresIn } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      res.status(400).json({ message: "Invalid snippet ID" });
+      return;
     }
-  };
+
+    const snippet = await Snippet.findById(id);
+    if (!snippet) {
+      res.status(404).json({ message: "Snippet not found" });
+      return;
+    }
+
+    snippet.title = title || snippet.title;
+    snippet.code = code ? encodeCode(code) : snippet.code;
+    snippet.language = language || snippet.language;
+    snippet.tags = tags || snippet.tags;
+    snippet.updatedAt = new Date();
+
+    if (expiresIn) {
+      snippet.expiresAt = new Date(Date.now() + expiresIn * 1000);
+    }
+
+    await snippet.save();
+    res.status(200).json({
+      ...snippet.toObject(),
+      code: decodeCode(snippet.code),
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating snippet", error });
+  }
+};
+
 
 export const getSnippets = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { language, tags, page = "1", limit = "10", sort = "createdAt", order = "desc" } = req.query;
+    const {
+      language,
+      tags,
+      page = "1",
+      limit = "10",
+      sort = "createdAt",
+      order = "desc",
+    } = req.query;
 
     const filter: any = {};
     if (language) filter.language = { $regex: new RegExp(language as string, "i") };
     if (tags) filter.tags = { $all: (tags as string).split(",") };
 
-    const pageNumber = parseInt(page as string, 10);
-    const pageSize = parseInt(limit as string, 10);
+    
+    filter.expiresAt = { $gte: new Date() };
+
+    const pageNumber = parseInt(page as string, 10) || 1;
+    const pageSize = parseInt(limit as string, 10) || 10;
     const skip = (pageNumber - 1) * pageSize;
     const sortOrder = order === "desc" ? -1 : 1;
 
@@ -91,14 +112,16 @@ export const getSnippets = async (req: Request, res: Response): Promise<void> =>
   }
 };
 
+
 export const getSnippetById = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-        res.status(400).json({ message: "Invalid snippet ID" });
-        return;
-      }
+      res.status(400).json({ message: "Invalid snippet ID" });
+      return;
+    }
+
     const snippet = await Snippet.findById(id);
 
     if (!snippet) {
@@ -120,24 +143,24 @@ export const getSnippetById = async (req: Request, res: Response): Promise<void>
   }
 };
 
+
 export const deleteSnippet = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { id } = req.params;
-  
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        res.status(400).json({ message: "Invalid snippet ID" });
-        return;
-      }
-  
-      const snippet = await Snippet.findByIdAndDelete(id);
-      if (!snippet) {
-        res.status(404).json({ message: "Snippet not found" });
-        return;
-      }
-  
-      res.status(200).json({ message: "Snippet deleted successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Error deleting snippet", error });
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      res.status(400).json({ message: "Invalid snippet ID" });
+      return;
     }
-  };
-  
+
+    const snippet = await Snippet.findByIdAndDelete(id);
+    if (!snippet) {
+      res.status(404).json({ message: "Snippet not found" });
+      return;
+    }
+
+    res.status(200).json({ message: "Snippet deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting snippet", error });
+  }
+};
