@@ -7,6 +7,10 @@ import { helloMiddleware } from "./middleware/exampleMiddleware";
 import snippetRoutes from "./routes/snippetRoutes";
 import mongoose from "mongoose";
 import path from "path";
+import dashboardRoutes from "./routes/dashboardRoutes";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 // Variables
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,7 +22,13 @@ app.use(express.json());
 // Static files
 app.use(express.static("public"));
 
+// View engine
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+
+
 // Routes
+app.use("/", dashboardRoutes);
 app.use("/api", helloMiddleware);
 app.use("/api/snippets", snippetRoutes);
 app.all("*", notFound);
