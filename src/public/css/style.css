@@ -1,10 +1,16 @@
 body {
   font-family: Arial, sans-serif;
   background-color: #f8f9fa;
+  padding: 20px;
 }
-pre {
-  background: #e9ecef;
+h2 {
+  font-weight: bold;
+}
+pre.code-block {
+  background: #1e1e1e;
+  color: #ffffff;
   padding: 10px;
   border-radius: 5px;
   white-space: pre-wrap;
+  font-family: monospace;
 }
