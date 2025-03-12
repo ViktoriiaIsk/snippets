@@ -6,7 +6,7 @@ import { notFound } from "./controllers/notFoundController";
 import { helloMiddleware } from "./middleware/exampleMiddleware";
 import snippetRoutes from "./routes/snippetRoutes";
 import mongoose from "mongoose";
-
+import path from "path";
 // Variables
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,6 +14,9 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Static files
+app.use(express.static("public"));
 
 // Routes
 app.use("/api", helloMiddleware);

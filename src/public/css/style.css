@@ -1,0 +1,10 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f8f9fa;
+}
+pre {
+  background: #e9ecef;
+  padding: 10px;
+  border-radius: 5px;
+  white-space: pre-wrap;
+}
